@@ -6,6 +6,7 @@ from rest_framework import status
 
 
 CREATE_USER_URL = reverse('user:create')
+TOKEN_URL = reverse('user:token')
 
 
 def create_user(**params):
@@ -55,3 +56,32 @@ class PublicUserApiTests(TestCase):
             email=payload['email']
         ).exists()
         self.assertFalse(user_exists)
+
+    def test_create_token_for_user(self):
+        """Test that a token is created for a user"""
+        payload = {'email': 'test@django.io', 'password': 'testpass'}
+        create_user(**payload)
+        res = self.client.post(TOKEN_URL, payload)
+        self.assertTrue(res.status_code, status.HTTP_200_OK)
+        self.assertIn('token', res.data)
+
+    def test_create_token_invalid_credentials(self):
+        """Test that token is not created if invalid credentials are given"""
+        create_user(email='test@django.com', password='testpass')
+        payload = {'email':'test@django.com', 'password': 'wrong'}
+        res = self.client.post(TOKEN_URL, payload)
+        self.assertTrue(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotIn('token', res.data)
+
+    def test_create_token_no_user(self):
+        """Test that token is not created if user does not exist"""
+        payload = {'email':'test@django.com', 'password': 'wrong'}
+        res = self.client.post(TOKEN_URL, payload)
+        self.assertTrue(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotIn('token', res.data)
+
+    def test_create_token_no_missing_field(self):
+        """Test that token is not created if email/password not given"""
+        res = self.client.post(TOKEN_URL, {'email':'test@django.com', 'password': ''})
+        self.assertTrue(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotIn('token', res.data)
