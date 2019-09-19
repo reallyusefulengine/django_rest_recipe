@@ -68,20 +68,22 @@ class PublicUserApiTests(TestCase):
     def test_create_token_invalid_credentials(self):
         """Test that token is not created if invalid credentials are given"""
         create_user(email='test@django.com', password='testpass')
-        payload = {'email':'test@django.com', 'password': 'wrong'}
+        payload = {'email': 'test@django.com', 'password': 'wrong'}
         res = self.client.post(TOKEN_URL, payload)
         self.assertTrue(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertNotIn('token', res.data)
 
     def test_create_token_no_user(self):
         """Test that token is not created if user does not exist"""
-        payload = {'email':'test@django.com', 'password': 'wrong'}
+        payload = {'email': 'test@django.com', 'password': 'wrong'}
         res = self.client.post(TOKEN_URL, payload)
         self.assertTrue(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertNotIn('token', res.data)
 
     def test_create_token_no_missing_field(self):
         """Test that token is not created if email/password not given"""
-        res = self.client.post(TOKEN_URL, {'email':'test@django.com', 'password': ''})
+        res = self.client.post(
+                                TOKEN_URL,
+                                {'email': 'test@django.com', 'password': ''})
         self.assertTrue(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertNotIn('token', res.data)
